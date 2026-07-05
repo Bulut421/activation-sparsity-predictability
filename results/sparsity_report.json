@@ -1,0 +1,29 @@
+{
+  "18": {
+    "N_tokens": 6476,
+    "d_ffn": 11008,
+    "k": 3302,
+    "baseline_recall": 0.4223,
+    "predictor_recall": 0.5487,
+    "LIFT": 0.1264,
+    "predictor_precision": 0.5487
+  },
+  "30": {
+    "N_tokens": 6476,
+    "d_ffn": 11008,
+    "k": 3302,
+    "baseline_recall": 0.4599,
+    "predictor_recall": 0.6073,
+    "LIFT": 0.1474,
+    "predictor_precision": 0.6073
+  },
+  "6": {
+    "N_tokens": 6476,
+    "d_ffn": 11008,
+    "k": 3302,
+    "baseline_recall": 0.5128,
+    "predictor_recall": 0.6756,
+    "LIFT": 0.1628,
+    "predictor_precision": 0.6756
+  }
+}

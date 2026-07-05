@@ -1,0 +1,14 @@
+# buyuk artefaktlar - script'ler yeniden uretir
+*.pt
+*.npz
+sparsity_data*/
+wikitext_eval.jsonl
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# os
+Thumbs.db
+.DS_Store
