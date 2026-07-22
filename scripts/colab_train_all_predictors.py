@@ -7,8 +7,6 @@ held-out belgeleri jsonl'e dok.
 
 Bellek dostu: katman basina ayri toplama gecisi (24 gecis, H100'de ~1s/belge
 degil — toplam ~25-35 dk). Tek katmanin verisi ~4.5GB, gecis sonunda birakilir.
-Colab koparsa: her katmandan sonra ckpt'ye yazilir, ayni komut kaldigi
-katmandan devam eder.
 
 Sonra (ayni Colab oturumunda, predictor_quality.py'yi de yukleyip):
   python predictor_quality.py --prompts wikitext_eval.jsonl --device cuda \

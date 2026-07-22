@@ -1,0 +1,43 @@
+{
+  "torch_full_ms": 2.293160499998521,
+  "numba_full_ms": 3.273135999988881,
+  "predictor_ms": 0.2604745000007824,
+  "budgets": {
+    "0.05": {
+      "k": 409,
+      "numba_gather_ms": 0.1784819999966203,
+      "with_pred_ms": 0.4389564999974027,
+      "prebuilt_ms": 0.1749470000004294,
+      "speedup_vs_torch_full": 12.848,
+      "speedup_with_pred": 5.224,
+      "ceiling_prebuilt": 13.108
+    },
+    "0.20": {
+      "k": 1638,
+      "numba_gather_ms": 0.7297414999993634,
+      "with_pred_ms": 0.9902160000001459,
+      "prebuilt_ms": 0.6082700000024488,
+      "speedup_vs_torch_full": 3.142,
+      "speedup_with_pred": 2.316,
+      "ceiling_prebuilt": 3.77
+    },
+    "0.30": {
+      "k": 2457,
+      "numba_gather_ms": 0.9961544999987382,
+      "with_pred_ms": 1.2566289999995206,
+      "prebuilt_ms": 0.7339470000033543,
+      "speedup_vs_torch_full": 2.302,
+      "speedup_with_pred": 1.825,
+      "ceiling_prebuilt": 3.124
+    },
+    "0.40": {
+      "k": 3276,
+      "numba_gather_ms": 1.4855459999989762,
+      "with_pred_ms": 1.7460204999997586,
+      "prebuilt_ms": 0.9836150000000999,
+      "speedup_vs_torch_full": 1.544,
+      "speedup_with_pred": 1.313,
+      "ceiling_prebuilt": 2.331
+    }
+  }
+}

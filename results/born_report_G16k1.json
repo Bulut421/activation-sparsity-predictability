@@ -1,0 +1,257 @@
+{
+  "G": 16,
+  "k": 1,
+  "active_frac": 0.0625,
+  "params_M": 17.59,
+  "final_ppl": 5.523,
+  "route_entropy": 1.0,
+  "max_block": 0.066,
+  "history": [
+    {
+      "step": 0,
+      "ppl": 8694.399,
+      "route_entropy": 0.972,
+      "max_block": 0.117
+    },
+    {
+      "step": 500,
+      "ppl": 37.538,
+      "route_entropy": 0.997,
+      "max_block": 0.077
+    },
+    {
+      "step": 1000,
+      "ppl": 17.49,
+      "route_entropy": 0.998,
+      "max_block": 0.077
+    },
+    {
+      "step": 1500,
+      "ppl": 12.994,
+      "route_entropy": 0.999,
+      "max_block": 0.072
+    },
+    {
+      "step": 2000,
+      "ppl": 11.047,
+      "route_entropy": 0.998,
+      "max_block": 0.071
+    },
+    {
+      "step": 2500,
+      "ppl": 9.709,
+      "route_entropy": 0.998,
+      "max_block": 0.074
+    },
+    {
+      "step": 3000,
+      "ppl": 8.956,
+      "route_entropy": 0.999,
+      "max_block": 0.069
+    },
+    {
+      "step": 3500,
+      "ppl": 8.493,
+      "route_entropy": 0.999,
+      "max_block": 0.071
+    },
+    {
+      "step": 4000,
+      "ppl": 8.013,
+      "route_entropy": 0.999,
+      "max_block": 0.067
+    },
+    {
+      "step": 4500,
+      "ppl": 7.829,
+      "route_entropy": 0.999,
+      "max_block": 0.074
+    },
+    {
+      "step": 5000,
+      "ppl": 7.552,
+      "route_entropy": 1.0,
+      "max_block": 0.068
+    },
+    {
+      "step": 5500,
+      "ppl": 7.389,
+      "route_entropy": 0.999,
+      "max_block": 0.07
+    },
+    {
+      "step": 6000,
+      "ppl": 7.14,
+      "route_entropy": 0.999,
+      "max_block": 0.069
+    },
+    {
+      "step": 6500,
+      "ppl": 7.016,
+      "route_entropy": 0.999,
+      "max_block": 0.074
+    },
+    {
+      "step": 7000,
+      "ppl": 6.981,
+      "route_entropy": 0.999,
+      "max_block": 0.071
+    },
+    {
+      "step": 7500,
+      "ppl": 6.868,
+      "route_entropy": 0.999,
+      "max_block": 0.07
+    },
+    {
+      "step": 8000,
+      "ppl": 6.637,
+      "route_entropy": 0.999,
+      "max_block": 0.07
+    },
+    {
+      "step": 8500,
+      "ppl": 6.602,
+      "route_entropy": 0.999,
+      "max_block": 0.069
+    },
+    {
+      "step": 9000,
+      "ppl": 6.496,
+      "route_entropy": 0.999,
+      "max_block": 0.073
+    },
+    {
+      "step": 9500,
+      "ppl": 6.365,
+      "route_entropy": 1.0,
+      "max_block": 0.069
+    },
+    {
+      "step": 10000,
+      "ppl": 6.3,
+      "route_entropy": 0.999,
+      "max_block": 0.072
+    },
+    {
+      "step": 10500,
+      "ppl": 6.232,
+      "route_entropy": 0.999,
+      "max_block": 0.071
+    },
+    {
+      "step": 11000,
+      "ppl": 6.085,
+      "route_entropy": 1.0,
+      "max_block": 0.068
+    },
+    {
+      "step": 11500,
+      "ppl": 6.077,
+      "route_entropy": 0.999,
+      "max_block": 0.068
+    },
+    {
+      "step": 12000,
+      "ppl": 6.041,
+      "route_entropy": 1.0,
+      "max_block": 0.067
+    },
+    {
+      "step": 12500,
+      "ppl": 5.997,
+      "route_entropy": 0.999,
+      "max_block": 0.071
+    },
+    {
+      "step": 13000,
+      "ppl": 5.91,
+      "route_entropy": 1.0,
+      "max_block": 0.066
+    },
+    {
+      "step": 13500,
+      "ppl": 5.9,
+      "route_entropy": 1.0,
+      "max_block": 0.07
+    },
+    {
+      "step": 14000,
+      "ppl": 5.859,
+      "route_entropy": 1.0,
+      "max_block": 0.068
+    },
+    {
+      "step": 14500,
+      "ppl": 5.787,
+      "route_entropy": 1.0,
+      "max_block": 0.067
+    },
+    {
+      "step": 15000,
+      "ppl": 5.699,
+      "route_entropy": 1.0,
+      "max_block": 0.067
+    },
+    {
+      "step": 15500,
+      "ppl": 5.651,
+      "route_entropy": 1.0,
+      "max_block": 0.068
+    },
+    {
+      "step": 16000,
+      "ppl": 5.568,
+      "route_entropy": 0.999,
+      "max_block": 0.067
+    },
+    {
+      "step": 16500,
+      "ppl": 5.626,
+      "route_entropy": 1.0,
+      "max_block": 0.069
+    },
+    {
+      "step": 17000,
+      "ppl": 5.643,
+      "route_entropy": 0.999,
+      "max_block": 0.068
+    },
+    {
+      "step": 17500,
+      "ppl": 5.64,
+      "route_entropy": 1.0,
+      "max_block": 0.068
+    },
+    {
+      "step": 18000,
+      "ppl": 5.569,
+      "route_entropy": 0.999,
+      "max_block": 0.069
+    },
+    {
+      "step": 18500,
+      "ppl": 5.534,
+      "route_entropy": 1.0,
+      "max_block": 0.069
+    },
+    {
+      "step": 19000,
+      "ppl": 5.481,
+      "route_entropy": 0.999,
+      "max_block": 0.068
+    },
+    {
+      "step": 19500,
+      "ppl": 5.422,
+      "route_entropy": 0.999,
+      "max_block": 0.07
+    },
+    {
+      "step": 20000,
+      "ppl": 5.495,
+      "route_entropy": 0.999,
+      "max_block": 0.068
+    }
+  ]
+}

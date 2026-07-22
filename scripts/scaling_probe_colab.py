@@ -149,6 +149,17 @@ def eval_probe(net, X_te, M_te, rank):
 
 
 def main():
+    import argparse
+    global SCALES, TEST_TOKENS
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--scales", default=None,
+                    help="or. '6000,30000,100000,300000,1000000' (1M noktasi icin)")
+    ap.add_argument("--test-tokens", type=int, default=TEST_TOKENS)
+    a = ap.parse_args()
+    if a.scales:
+        SCALES = [int(s) for s in a.scales.split(",")]
+    TEST_TOKENS = a.test_tokens
+
     tok = AutoTokenizer.from_pretrained(MODEL)
     model = AutoModelForCausalLM.from_pretrained(
         MODEL, dtype=torch.float16 if DEV == "cuda" else torch.float32,

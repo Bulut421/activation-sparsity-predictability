@@ -1,0 +1,33 @@
+{
+  "budget": 0.3,
+  "n_docs": 30,
+  "runs": {
+    "8": {
+      "dense_tok_s": 47.5,
+      "sparse_tok_s": 19.5,
+      "speedup": 0.411,
+      "ppl_dense": 22.891,
+      "ppl_sparse": 23.226,
+      "ppl_delta_pct": 1.46,
+      "mean_union_budget": 0.6242
+    },
+    "32": {
+      "dense_tok_s": 84.1,
+      "sparse_tok_s": 47.2,
+      "speedup": 0.561,
+      "ppl_dense": 22.891,
+      "ppl_sparse": 23.095,
+      "ppl_delta_pct": 0.89,
+      "mean_union_budget": 0.7704
+    },
+    "128": {
+      "dense_tok_s": 87.6,
+      "sparse_tok_s": 57.0,
+      "speedup": 0.651,
+      "ppl_dense": 22.891,
+      "ppl_sparse": 23.07,
+      "ppl_delta_pct": 0.78,
+      "mean_union_budget": 0.8256
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "config": {
+    "d_model": 2048,
+    "d_ffn": 8192,
+    "batch_tokens": 64,
+    "budgets": "0.05,0.20,0.30,0.40",
+    "threads": 0,
+    "iters": 200,
+    "out": "bench_stage0_T64.json"
+  },
+  "full_ms": 15.780697500013048,
+  "budgets": {
+    "0.05": {
+      "k": 409,
+      "gather_ms": 3.1354479999572504,
+      "gather_prebuilt_ms": 0.7192200000281446,
+      "block_ms": 0.7849240000359714,
+      "speedup_gather": 5.032996082291336,
+      "speedup_prebuilt": 21.94140527153794,
+      "speedup_block": 20.104745808880672
+    },
+    "0.20": {
+      "k": 1638,
+      "gather_ms": 8.355012999963947,
+      "gather_prebuilt_ms": 3.001832000009017,
+      "block_ms": 2.950591999979224,
+      "speedup_gather": 1.8887699516543115,
+      "speedup_prebuilt": 5.257022211757901,
+      "speedup_block": 5.3483156939773995
+    },
+    "0.30": {
+      "k": 2457,
+      "gather_ms": 11.257982999959495,
+      "gather_prebuilt_ms": 4.476414500095416,
+      "block_ms": 4.5463024999480695,
+      "speedup_gather": 1.401733996229149,
+      "speedup_prebuilt": 3.52529853964075,
+      "speedup_block": 3.47110591523404
+    },
+    "0.40": {
+      "k": 3276,
+      "gather_ms": 14.301148999948055,
+      "gather_prebuilt_ms": 6.390844499983359,
+      "block_ms": 7.7809870000055525,
+      "speedup_gather": 1.1034566173718188,
+      "speedup_prebuilt": 2.469266385695058,
+      "speedup_block": 2.0281099942721643
+    }
+  }
+}

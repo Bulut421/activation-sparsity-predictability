@@ -212,7 +212,10 @@ def main():
         X, A = d["X"].astype(np.float32), d["A"].astype(np.float32)
         N, d_ffn = A.shape
         if args.mask_mode == "live":
-            M_all = (A > 0).astype(np.float32)          # gercek canli maske
+            # (A != 0): gated-ReLU modellerde (ReluLLaMA: a = relu(gate)*up)
+            # sifir-olmayan girdiler NEGATIF olabilir; (A > 0) onlari olu sayardi.
+            # OPT'de (relu ciktisi >= 0) davranis ayni.
+            M_all = (A != 0).astype(np.float32)         # gercek canli maske
             k = max(1, int(round(M_all.sum(1).mean()))) # butce = ort. canli sayisi
             print(f"  [live] ort. canli oran: {k/d_ffn:.1%} ({k}/{d_ffn} noron)")
         else:

@@ -1,8 +1,22 @@
 # Activation Sparsity Predictability — Research Log
 
-**Last updated:** 2026-07-05
-**Author:** Bulut (Kler3) | **Hardware:** RTX 5060 8GB / 32GB RAM (CPU-torch venv), Colab H100/A100 for training
-**Status:** Value proof achieved (Card 13). Research phase closed; engineering phase open.
+**Last updated:** 2026-07 (Cards 1–27)
+**Author:** Bulut (Kler3) | **Hardware:** RTX 5060 8GB / 32GB RAM, Colab A100/H100 for training
+
+> **➡️ Start with [`WRITEUP.md`](WRITEUP.md)** — the narrative blog post covering the full arc, from "can we predict sparsity?" to the born-eye result. This README is the detailed English log (through Card 13); the complete per-card log is in [`NOTES_TR.md`](NOTES_TR.md) (Turkish, Cards 1–27).
+
+**Headline (Phase 3, Cards 21–27):** we built the alternative to a bolted-on predictor — a from-scratch 17.5M model whose FFN has a **learned block router** that *decides* which neurons fire (a born-eye). At matched budget/training on TinyStories, same eval:
+
+| FFN budget | post-hoc predictor (best) | **born-eye** | oracle (unreachable) |
+|---|---|---|---|
+| 12.5% active | +32.0% ppl | **+5.2% ppl** | +2.1% ppl |
+| 6.25% active | +158% ppl | **+22.4% ppl** | +12.4% ppl |
+
+The born-eye removes ~90% of the **imitation burden** (predictor − oracle), consistently, while the post-hoc predictor's burden explodes as the budget tightens. *Deciding* what to skip beats *guessing* it. Reference implementation: [`scripts/born_eye.py`](scripts/born_eye.py). (Research scale — 17.5M params, TinyStories; large-scale confirmation is open.)
+
+---
+
+**Phase-1 status below (value proof, Card 13): post-hoc prediction on OPT-1.3b.**
 
 ## TL;DR
 

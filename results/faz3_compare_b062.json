@@ -1,0 +1,9 @@
+{
+  "budget": 0.0625,
+  "rank": 0,
+  "A_baseline": 4.4807,
+  "A_oracle": 5.0355,
+  "A_static": 2495.0354,
+  "A_predictor": 11.5725,
+  "born": 5.4824
+}

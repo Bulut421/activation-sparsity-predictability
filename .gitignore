@@ -1,7 +1,9 @@
 # buyuk artefaktlar - script'ler yeniden uretir
 *.pt
 *.npz
+*.bin
 sparsity_data*/
+tinystories_data/
 wikitext_eval.jsonl
 
 # python

@@ -1,0 +1,50 @@
+{
+  "config": {
+    "d_model": 2048,
+    "d_ffn": 8192,
+    "batch_tokens": 1,
+    "budgets": "0.05,0.20,0.30,0.40",
+    "threads": 1,
+    "iters": 200,
+    "out": "bench_stage0_T1_th1.json"
+  },
+  "full_ms": 3.920713500119746,
+  "budgets": {
+    "0.05": {
+      "k": 409,
+      "gather_ms": 6.246963000012329,
+      "gather_prebuilt_ms": 0.14429100003326312,
+      "block_ms": 0.1542055000027176,
+      "speedup_gather": 0.6276191327068863,
+      "speedup_prebuilt": 27.17226645609159,
+      "speedup_block": 25.425250720957752
+    },
+    "0.20": {
+      "k": 1638,
+      "gather_ms": 15.262520999967819,
+      "gather_prebuilt_ms": 0.7771840000350494,
+      "block_ms": 0.7688749999215361,
+      "speedup_gather": 0.25688505196015865,
+      "speedup_prebuilt": 5.04476867761422,
+      "speedup_block": 5.0992859704371405
+    },
+    "0.30": {
+      "k": 2457,
+      "gather_ms": 18.82393249994493,
+      "gather_prebuilt_ms": 1.1497575000976212,
+      "block_ms": 1.153045000100974,
+      "speedup_gather": 0.20828344449977262,
+      "speedup_prebuilt": 3.410035159402617,
+      "speedup_block": 3.4003126502230208
+    },
+    "0.40": {
+      "k": 3276,
+      "gather_ms": 22.806600500043714,
+      "gather_prebuilt_ms": 1.5656084999500308,
+      "block_ms": 1.5524789999471977,
+      "speedup_gather": 0.17191135084390288,
+      "speedup_prebuilt": 2.504274536223381,
+      "speedup_block": 2.525453484557985
+    }
+  }
+}
