@@ -1,9 +1,9 @@
 # Activation Sparsity Predictability — Research Log
 
-**Last updated:** 2026-07 (Cards 1–27)
+**Last updated:** 2026-07 (Cards 1–33)
 **Author:** Bulut (Kler3) | **Hardware:** RTX 5060 8GB / 32GB RAM, Colab A100/H100 for training
 
-> **➡️ Start with [`WRITEUP.md`](WRITEUP.md)** — the narrative blog post covering the full arc, from "can we predict sparsity?" to the born-eye result. This README is the detailed English log (through Card 13); the complete per-card log is in [`NOTES_TR.md`](NOTES_TR.md) (Turkish, Cards 1–27).
+> **➡️ Start with [`WRITEUP.md`](WRITEUP.md)** — the narrative blog post covering the full arc, from "can we predict sparsity?" to the born-eye result. This README is the detailed English log (through Card 13); the complete per-card log is in [`NOTES_TR.md`](NOTES_TR.md) (Turkish, Cards 1–33).
 
 **Headline (Phase 3, Cards 21–27):** we built the alternative to a bolted-on predictor — a from-scratch 17.5M model whose FFN has a **learned block router** that *decides* which neurons fire (a born-eye). At matched budget/training on TinyStories, same eval:
 
