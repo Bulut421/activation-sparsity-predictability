@@ -983,6 +983,334 @@ iki seed ~ayni oldugu icin materyal etki yok, referans ckpt artik seed1.)
 
 Dosya: born\_report\_G16k2.json (seed1 son hali)
 
+\### Kart 28 — Router ablasyonu: KAZANCIN KAYNAGI CO-ADAPTASYON (routing degil)
+
+Gerekce: entropi 1.0 router'in ISE YARADIGINI kanitlamaz. Kaynak (a) gövde mi
+
+(b) ogrenilmis secim mi — ayirdik.
+
+28a (eval-time swap, born\_G16k2, ayni batch): learned 4.72 -> random **1338**
+
+(+28238%), fixed **1220** (+25743%). Govde router'a co-adapte -> swap COKUYOR.
+
+Kosullu secim cesitliligi (Jaccard) **0.909** tum katmanlar -> routing girdiye
+
+GERCEKTEN kosullu (sahte entropi degil). Ama co-adaptasyon confound'u -> 28b.
+
+28b (SIFIRDAN egitim, tek fark router; ayni veri/butce/step):
+
+| kol | ppl | ne ekler |
+
+|---|---|---|
+
+| dense A (%100 FFN) | 4.481 | referans |
+
+| oracle @12.5% (ulasilamaz) | 4.573 | — |
+
+| born LEARNED | 4.723 | — |
+
+| born RANDOM (donuk router) | 4.827 | ogrenme: +0.10 (+%2) |
+
+| born FIXED (girdi-bagimsiz) | 5.265 | girdi-kosullama: +0.44 |
+
+| post-hoc predictor (en iyi) | 5.916 | co-adaptasyon: +0.65 |
+
+AYRISMA (onem sirasi): CO-ADAPTASYON (post-hoc->fixed, +0.65) > GIRDI-KOSULLAMA
+
+(fixed->random, +0.44) >> ROUTER-OGRENME (random->learned, +0.10).
+
+1. **Ogrenilmis router EN AZ katki (+%2).** Tutarli girdi-bagimli HERHANGI bir
+
+&#x20;  bolumleme (donuk-random dahil) yetiyor — govde etrafinda oruluyor.
+
+2. **Fixed born bile post-hoc'u geciyor** (5.27 < 5.92). Born'un ustunlugu
+
+&#x20;  routing zekasi DEGIL, gövdeyi seyrek-bilerek egitmek (co-adaptasyon).
+
+3. Girdi-kosullama gercek katki (fixed 5.27 -> random 4.83): bolumleme girdiye
+
+&#x20;  bagli olmali, ama OGRENILMIS olmasi sart degil.
+
+TEZ RAFINMANI (zayiflatmaz, "neden"i duzeltir): born post-hoc'u yeniyor cunku
+
+TAKLIT degil CO-ADAPTASYON. "Ogrenilmis secim" hikayenin yildizi degil.
+
+CAVEAT (kritik): tiny olcek (k=2/G=16, 17.5M). Olcekte cok blok + zor gorevde
+
+ogrenilmis routing cok daha onemli olabilir — "ogrenme onemsiz" KUCUK-OLCEK
+
+ARTEFAKTI olabilir (6k-token negatifleri gibi). Faz 4c olcek testi bunu yoklar.
+
+Dosya: router\_ablation.py, router\_ablation\_born\_G16k2.json,
+
+born\_G16k2\_s0\_random.pt, born\_G16k2\_s0\_fixed.pt (+ report'lari)
+
+\### Kart 29 — Faz 4a: granularite supurmesi -> ESIK + PLATO
+
+Sabit %12.5 butce, degisen blok (train\_born --G/--k). Router hepsinde saglam
+
+(entropi 1.000, max-blok ideale yakin, cokus yok).
+
+| kol | ppl | secim uzayi C(G,k) | k |
+
+|---|---|---|---|
+
+| G8k1 (192-noron blok) | 5.430 | 8 | 1 (harman yok) |
+
+| G16k2 (96-noron) | 4.723 | 120 | 2 |
+
+| G32k4 (48-noron) | 4.723 | 35960 | 4 |
+
+EGRI: kaba (G8) +%15 kotu; G16'da doyuyor; G32 HIC eklemiyor (4.723=4.723).
+
+Yani granularite bir ESIGE kadar onemli (cok kaba = kotu), otesi PLATO.
+
+CONFOUND (kayitli): G8k1 ayni zamanda TEK k=1 kolu (tek blok, gate-harman yok).
+
+12.5% butcede k=1 -> zorunlu G=8. Yani "kaba blok" ile "k=1 harman yok"
+
+ayrilamiyor (ayni butcede). Temiz olan: G16=G32 platosu (ikisi de k>=2, zengin,
+
+birebir esit). Pratik sonuc: k>=2 kullan, G16 yeter, G32 gereksiz.
+
+KART 28+29 BIRLESIK TABLO (born-eye neye ihtiyac duyar):
+
+1. CO-ADAPTASYON (govdeyi seyrek-bilerek egit) — en buyuk (Kart 28).
+
+2. GIRDI-KOSULLU bolumleme (fixed degil) — Kart 28.
+
+3. YETERINCE ZENGIN/ince partisyon, k>=2 (cok kaba degil) — Kart 29; G16 yeter.
+
+IHTIYAC DUYMADIGI: ogrenilmis (random yeter, K28) routing; sonsuz ince blok (K29).
+
+FALSIFIKASYON COZULDU: "random~learned VE granularite duz -> ProSparse'a coker"
+
+kosulunun IKINCI yarisi YANLIS cikti (granularite DUZ DEGIL, esik var). Yani
+
+born ProSparse'a COKMUYOR: "co-adaptive + girdi-kosullu + blok-yapili yeterince
+
+ince seyreklik" ProSparse'tan (tek sabit desen) DAHA ZENGIN bir sey. Router'in
+
+akilli olmasi sart degil, ama partisyon uzayi girdi-kosullu ve yeterince ince olmali.
+
+CAVEAT: tiny olcek; esik/plato yeri (G16) olcege gore kayabilir. 4c yoklar.
+
+Dosya: born\_G8k1\_s0.pt, born\_G32k4\_s0.pt (+ report\_G{8k1,32k4}\_s0.json)
+
+
+
+\### Kart 30 — Faz 4b: born decode kernel'i STOK matmul ile realize (implementasyon kritik)
+
+bench\_born\_kernel.py: OPT-olcek FFN (d=2048 f=8192), T=1 decode, %12.5 butce.
+
+Full vs born(cat) vs born\_loop(slice-view) vs posthoc(scatter) vs ceiling(prebuilt).
+
+Sayilar (speedup, G16k2):
+
+| kip | th=8 | th=1 |
+
+|---|---|---|
+
+| full | 1.00x | 1.00x |
+
+| born (cat=fancy-index gather) | 2.12x | 1.31x |
+
+| born\_loop (bitisik slice-VIEW) | **3.91x** | **7.41x** |
+
+| posthoc (dagitik gather) | 2.17x | 1.22x |
+
+| ceiling (prebuilt bitisik) | 6.73x | 8.75x |
+
+KRITIK BULGU (implementasyon): W1[idx] fancy-index BITISIK olsa bile TAM gather-
+
+kopya yapar -> born(cat) ≈ posthoc (avantaj COP). Ama born'un bloklari bitisik
+
+oldugu icin W1[bas:bit] SIFIR-KOPYA slice-view kullanilabilir (born\_loop) ->
+
+posthoc'un YAPAMADIGI sey (dagitik satir slice-view olmaz).
+
+SONUC: born\_loop (slice-view) ≈ ceiling (7.41/8.75, th=1) VE posthoc'u ~6x geciyor
+
+(7.41 vs 1.22). Born decode STOK matmul ile realize -> OZEL KERNEL GEREKSIZ.
+
+Post-hoc'un K17 numba-0.70x ucurumu born'da YOK (bitisik = native matmul).
+
+th=1 gercek decode rejimi (minik matvec overhead-bound; 8-thread kucukte zarar).
+
+GRANULARITE-KERNEL: kaba blok kernel'i hafif seviyor (G8k1 9.66x, G16k2 7.41x?,
+
+G32k4 6.32x @th8 — az/buyuk bitisik parca daha iyi). Kart 29 KALITEYI ince
+
+istiyordu (G8 kotu) -> G16 iki tarafi dengeleyen TATLI NOKTA.
+
+CAVEAT: micro-benchmark, tek FFN, CPU, T=1, stok-torch. (i) Gercek uctan-uca
+
+decode tok/s (tum katman + attention + KV) = 4b-adim2, YAPILMADI. (ii) Python-
+
+loop overhead'li born\_loop bir ALT SINIR; fuse'lu kernel ceiling'e daha yakin.
+
+(iii) Prefill'de her token farkli blok -> MoE-dispatch (Kart 16), decode temiz.
+
+Dosya: bench\_born\_kernel.py, (cikti kartta)
+
+
+
+\### Kart 31 — Faz 4c: OLCEK (2x, 36M) -> makas DARALDI (durust, kismi negatif)
+
+d=512 L=10 h=8 (~36M, 2x), TinyStories, ayni recete, Colab A100 (~20 dk/kosu).
+
+Saturasyon YOK: A val ppl 4.14 (>3.5). Dogal seyreklik %89->**%92** (ölçekle artti).
+
+| olcum | 17.5M | 36M |
+
+|---|---|---|
+
+| A-oracle @12.5% | +2.1% | +1.1% |
+
+| A-predictor (en iyi) | +32% | +17.5% |
+
+| born | +5.2% | +5.4% |
+
+| **born vs post-hoc** | **-20%** | **-10.3%** |
+
+| taklit yuku (pred-oracle) | ~30 puan | ~16 puan |
+
+| learned vs random | +2.2% | +1.9% |
+
+1. **Kart 28 OLCEKTE TUTUYOR:** born random 4.469 vs learned 4.387 = +1.9%
+
+&#x20;  (≈ tiny +2.2%). "Ogrenilmis routing onemsiz" kucuk-olcek artefakti DEGIL (2x'e).
+
+2. **Taklit yuku YARIYA indi** (30->16 puan) -> born goreli avantaji yariya
+
+&#x20;  (-20%->-10%). Buyuk model daha seyrek (%92) -> post-hoc'un isi kolay. Kart 12'nin
+
+&#x20;  (VERI olcegi post-hoc'u kolaylastirdi) MODEL-olcegi hali: hem veri hem model
+
+&#x20;  olcegi post-hoc'u guclendiriyor. Born avantaji KISITLI rejimde en buyuk.
+
+3. Born hala kazaniyor (-10.3%) ve born maliyeti sabit (+5.2->+5.4%). Born saglam.
+
+AGRESIF REJIM TESTI (confound cozumu): born k=1 @36M (%6.25 < %8 canli),
+
+faz3_compare @6.25%: A-oracle +6.4%, post-hoc **+77.6%**, born **+21.8%** ->
+
+born -31.4%. Router k=1+olcekte de cokmedi (entropi 1.000).
+
+TAM 2x2 TABLO (butce x olcek):
+
+| butce | olcek | oracle | post-hoc | born | born-vs-pred | taklit yuku |
+
+|---|---|---|---|---|---|---|
+
+| %12.5 | 17.5M | +2.1% | +32% | +5.2% | -20% | ~30p |
+
+| %12.5 | 36M | +1.1% | +17.5% | +5.4% | -10.3% | ~16p |
+
+| %6.25 | 17.5M | +12.4% | +158% | +22.4% | -53% | ~146p |
+
+| %6.25 | 36M | +6.4% | +77.6% | +21.8% | -31.4% | ~71p |
+
+IKI EKSEN AYRISTI (temiz):
+
+A. BUTCE ekseni (TEZ TUTUYOR): born avantaji agresif butcede cok daha buyuk
+
+&#x20;  (36M'de -31% @6.25 vs -10% @12.5). Her olcekte. NARROWING butce-artefakti DEGIL.
+
+B. OLCEK ekseni (yeni, durust): her butcede 2x olcek taklit yukunu ~YARIYA
+
+&#x20;  indiriyor (30->16, 146->71); born maliyeti SABIT (+22->+22, +5->+5); post-hoc
+
+&#x20;  yaklasiyor. Buyuk model daha seyrek (%89->%92) -> post-hoc'un isi kolay (Kart
+
+&#x20;  12'nin veri-olceginin model-olcegi karsiligi).
+
+SONUC: born HER butce+olcekte kazaniyor, agresif butcede net ustun; ama margin
+
+olcekle eriyor. ~yariya-inme surerse cok buyukte post-hoc agresif butcede bile
+
+yetisebilir — 2 noktadan EKSTRAPOLASYON, kesin degil. Tez: born-eye kisitli
+
+rejimde (agresif butce, kucuk/orta model) en degerli; olcek imitasyon yukunu
+
+kucultup makasi daraltiyor. "Her yerde daha iyi" DEGIL, "kisitli rejimi acan sey".
+
+Dosya: faz3_compare_b125.json (36M), born_report_G16k2_s0{,_random}.json (36M),
+
+baby_report_s0.json (36M, dogal sifir %92)
+
+
+
+\### Kart 32 — Faz 4d-adim1: DEGISKEN-k (adaptif genislik) -> FAYDA YOK + korelasyon TERS
+
+Soru: tek born-goz butcesini token-basi ADAPTIF dagitirsa (kolay token az blok / zor cok, ortalama %12.5 SABIT) sabit-k born'u (4.723) geciyor mu? Sabit top-k'da "zor token daha cok butce" TANIMSIZDI (her token tam k blok); 4d-adim1 bunu test eder. Mekanizma: bagimsiz sigmoid blok-kapilari, top-k YOK, aktif-sayi emergent (Kart 28'in 'ogrenilmis degisken-k' onerisi).
+
+V1 (SOFT kapi, train_born_vark.py) -> SOFT-CHEAT, GERCEKLESTIRILEMEZ:
+
+Yuzeyde POZITIF gorundu: val ppl 4.618, mean_g 0.125, corr(sayi,kayip) +0.166, zor/kolay 1.12x. AMA kapi aktivasyonu OLCEKLIYOR (sifirlamiyor) -> soft modda 16 blok da hesaplaniyor, tasarruf YOK. Falsifikasyon (eval_bornvar_hard.py, g>0.5 hard-esik): ppl 4.6 -> 551, compute %6. Kalite tamamen KESIRLI kapilardan geliyormus (ikili %78 = kapilarin %22'si tasiyici ortak kutle). Kok neden: train/deploy uyusmazligi (soft egit, hard deploy). DERS: "butce tuttu + corr>0" YETMEZ; deploy-esitligi (hard==soft) olcumu SART. Bu, 4d'nin Kart 9 ani (vekil-metrik tuzagi, in-loop/gercek olcum sart).
+
+V2 (STE hard-forward, train_born_vark_ste.py) -> uyusmazlik YAPISAL kaldirildi:
+
+g = g_hard + (g_soft - g_soft.detach()): forward 0/1 GERCEK secim, backward sigmoid. Forward artik HARD -> kesirli-kapi hilesi imkansiz (0.125'lik kapi hard'da 0 olur), rapor edilen val ppl DOGRUDAN deploy sayisi.
+
+| kol | HARD ppl | Δ dense (4.481) |
+
+|---|---|---|
+
+| sabit-k born (G16k2) | 4.723 | +5.4% |
+
+| degisken-k STE | 4.869 | +8.7%  (sabit-k'ya +3.1% KOTU) |
+
+mean_g 0.123 (~%12.3, hedefe oturdu) + ikili %94 (v1'in %78'inden cok iyi = kararli hard-secim). Adaptasyon VAR: hard-sayi 1.96 (std ~1.0, buyuk token-arasi varyans; model sabit-2 yapmiyor, gercekten dagitiyor).
+
+KORELASYON TERS DONDU: corr(sayi,kayip) = -0.111; kolay token 2.13 blok, zor token 1.81 blok (zor/kolay 0.85x). Model zor token'a AZ, kolay token'a COK blok veriyor — HIPOTEZIN TAM TERSI.
+
+VERDICT (durust negatif, iki katmanli):
+
+1. Adaptif-k sabit-k'yi GECMIYOR (+3.1%). Bu olcek/butcede degisken genislik sabit-k'ya bir sey katmiyor -> FIXED-k YETER.
+
+2. ASIL BULGU: CE-zorlugu compute-tahsis EKSENI DEGIL. Yuksek-kayip token cogu zaman INDIRGENEMEZ surpriz (yeni isim, cumle basi) -> fazladan FFN yardim etmez; model blogu MARJINAL DEGERI olan yerde (tahmin-edilebilir yapida) harciyor. "Zor token daha cok butce hak eder" sezgisi bu olcekte YANLIS cikti.
+
+ROADMAP ETKISI: GOZ HARITASI'nin gozler-arasi BUTCE TAKASI vizyonu ("bu token derin in ama seyrek hesapla") tam bu "zorluk -> butce" varsayimina dayaniyordu -> bu olcekte DESTEKLENMEDI. 4d-full (iki-goz agirlik+derinlik) gerekcesi ZAYIFLADI; yatirimdan once yeniden dusun. Kart 28 ritmi tekrar: ogrenilmis karar-katmani (routing / adaptif-butce) minik olcekte beklenenden AZ deger katiyor.
+
+CAVEAT: (i) +3.1%'in bir kismi STE optimizasyon yanliligi olabilir (straight-through, top-k'dan lossier); AMA ters korelasyon STE-overhead'den BAGIMSIZ -> saglam bulgu (fayda-yoklugundan daha guclu iddia). (ii) tiny olcek (17.5M, %12.5); Kart 28/31 gibi olcekle kayabilir, ama ters korelasyonu duzeltir mi belirsiz. (iii) "zorluk" = token-CE; baska vekil (gate-margin, entropi, gradyan-normu) farkli sonuc verebilir (dusuk oncelik, acik soru).
+
+Dosya: train_born_vark.py (v1 soft, negatif kayit), eval_bornvar_hard.py (falsifikasyon), train_born_vark_ste.py (v2 STE), bornvar_ste_report_G16t0.125_s0.json, bornvar_report_G16t0.125_s0.json (v1 soft-cheat kaydi)
+
+
+
+\### Kart 33 — Faz 4b-adim2: UCTAN UCA decode tok/s -> born kerneli e2e KALIYOR (Amdahl-sinirli)
+
+Soru: Kart 30'un izole FFN kazanci (~7x @th1) TUM modelde (tum katman + attention + KV-cache + head) ne kadar kaliyor? born SADECE FFN'i hizlandirir -> uctan uca kazanc FFN'in decode-PAYIYLA sinirli (Amdahl). bench_decode_e2e.py: B=1 tek-akis, KV-cache'li GERCEK decode (T=1/adim), 4 kol (none / dense / born-sliceview / posthoc-scatter+predictor), CPU th=1, 4 olcek. slice-view dogrulugu (verify): max|Δ|=0, birebir.
+
+| olcek | ~par | FFN payi | FFN-only born | e2e born | e2e posthoc |
+
+|---|---|---|---|---|---|
+
+| baby d384/L8/f1536 | 17M | 48.8% | 1.67x | 1.24x | 0.75x |
+
+| mid d768/L12/f3072 | 91M | 54.8% | 3.46x | 1.64x | 0.91x |
+
+| large d1536/L24/f6144 | 693M | 61.0% | 5.51x | 2.00x | 1.08x |
+
+| opt d2048/L24/f8192 | 1226M | 63.0% | 6.22x | 2.12x | 1.23x |
+
+(teorik FFN FLOP orani her olcekte 8x = 1/butce.)
+
+1. born kerneli e2e KALIYOR ve OLCEKLE ACILIYOR: e2e born 1.24 -> 2.12x. FFN-only 1.67 -> 6.22x, Kart 30 izole tavanina (~7x @th1) YAKLASIYOR — minik matvec'te Python-loop/overhead FFN'i boguyordu (baby 1.67x); buyudukce ~8x FLOP orani gorunur oluyor (opt 6.22x ~ Kart30 7.41x, tam-model baglami kucuk farki aciklar). Izole Kart 30 kernel olcumu TAM-MODELDE dogrulandi.
+
+2. AMA Amdahl TAVANI belirleyici: FFN decode-zamaninin %49-63'u (olcekle artiyor); geri kalan (attn + head + norm + embed) born'a DOKUNULMAZ. Sonsuz-hizli FFN bile opt'ta e2e <= 1/(1-0.63) = 2.7x. born 2.12x -> mevcut basligin ~%80'ini aliyor. "8x FLOP" reklami e2e'de 2.1x'e iner -> FLOP orani != duvar-saati orani; DURUST decode sayisi budur.
+
+3. POSTHOC E2E COKUYOR: 0.75 -> 1.23x (baby'de dense'ten YAVAS!). Scatter-gather (dagitik d_ff satir kopyasi) + predictor overhead kazanci yiyor; posthoc e2e ~ izole posthoc (Kart30 1.22x) cunku FFN'i neredeyse hic hizlandirmiyor. born HER olcekte posthoc'u e2e ~1.7-1.85x geciyor. Kart 30'un "born bitisik / posthoc dagitik" farki TUM-MODELDE, duvar-saatinde teyitli.
+
+4. Projenin CEKIRDEK muhendislik sorusu ("az-calistirma gercek decode hizina cevriliyor mu") UCTAN UCA cevaplandi: EVET, ~2.1x gercek decode (1B-sekil, CPU, th1) — ve born'un BITISIK yapisi SART; post-hoc'un dagitik gather'i e2e neredeyse hicbir sey vermiyor (1.2x).
+
+VERDICT: 4b POZITIF ve KAPANDI. born decode kerneli stok-matmul ile realize (Kart 30, izole ~7x) + uctan uca ~2x hizlanma (bu kart). "20W paradoksu / az-calistirma" north-star'ina ilk duvar-saati e2e sayisi. NOT: bildirilen Amdahl tahmini == D/B OZDESLIGI (bagimsiz dogrulama degil, ayristirmanin kendisi); asil sonuc TREND + posthoc karsilastirmasi.
+
+CAVEAT: (i) th=1 (temiz kucuk-matvec / decode-latency rejimi); cok-cekirdek AYRI soru (Kart 30: th=8 born'a daha cok zarar veriyordu). (ii) FFN payi VOCAB (head) + BAGLAM UZUNLUGUNA bagli: burada vocab=8192, ctx ~64-128. Gercek 50k vocab / uzun baglam -> attn+head payi artar -> FFN payi ve e2e-born DUSER; uzun baglamda born (FFN gozu) tek basina yetmez, KV gozu (goz #2) gerekir -> GOZ HARITASI'na dogal kopru. (iii) rastgele agirlik (zamanlama deger-bagimsiz). (iv) CPU hedef (edge/llm-manager); GPU minik-batch launch-bound.
+
+Dosya: bench_decode_e2e.py, bench_decode_e2e.json
+
 
 
 \## Kapali kapilar (tekrar acma)

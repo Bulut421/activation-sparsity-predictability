@@ -38,11 +38,19 @@ class RoutedFFN(nn.Module):
         self.router = nn.Linear(d, G)
         self.aux = None
         self.load = None                              # blok dispatch frac (cokus izleme)
+        self.override = None                          # Kart 28 ablasyon: None|random|fixed
 
     def forward(self, x):                             # x: [B,T,d]
         logits = self.router(x)                       # [B,T,G]
         probs = F.softmax(logits, dim=-1)
-        topv, topi = probs.topk(self.k, dim=-1)       # [B,T,k]
+        if self.override == "random":                 # rastgele k blok (router yoksay)
+            topi = torch.rand_like(probs).topk(self.k, dim=-1).indices
+        elif self.override == "fixed":                # sabit ilk-k blok (girdi-bagimsiz)
+            B, T, _ = probs.shape
+            topi = torch.arange(self.k, device=x.device).view(1, 1, -1).expand(B, T, -1)
+        else:                                         # ogrenilmis (varsayilan, birebir ayni)
+            topi = probs.topk(self.k, dim=-1).indices
+        topv = torch.gather(probs, -1, topi)          # [B,T,k]
         topv = topv / (topv.sum(-1, keepdim=True) + 1e-9)   # renorm -> olcek korunur
         gate = torch.zeros_like(probs).scatter(-1, topi, topv)   # [B,T,G]
         mask = torch.zeros_like(probs).scatter(-1, topi, 1.0)
@@ -51,6 +59,7 @@ class RoutedFFN(nn.Module):
         P = probs.mean(dim=(0, 1))                    # mean gate [G]
         self.aux = self.G * (f * P).sum()
         self.load = f.detach()
+        self.last_mask = mask.detach()                # Kart 28: kosullu cesitlilik teshisi
         neuron_gate = gate.repeat_interleave(self.bs, dim=-1)    # [B,T,d_ff]
         h = F.relu(self.fc1(x)) * neuron_gate         # sadece secili bloklar canli
         return self.fc2(h)
@@ -160,6 +169,9 @@ def main():
     ap.add_argument("--eval-every", type=int, default=500)
     ap.add_argument("--sample-every", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--router", choices=["learned", "random", "fixed"], default="learned",
+                    help="Kart 28b ablasyon: random=donuk-random router (girdi-bagimli "
+                         "ama ogrenilmemis), fixed=sabit ilk-k blok (girdi-bagimsiz)")
     ap.add_argument("--device", default=None)
     args = ap.parse_args()
 
@@ -173,10 +185,19 @@ def main():
 
     model = BornGPT(vocab, args.d_model, args.n_layer, args.n_head, args.block,
                     args.d_ff, args.G, args.k).to(dev)
+    # Kart 28b ablasyon kollari (sifirdan egitim, tek fark router):
+    if args.router == "random":               # donuk-random router: girdi-bagimli ama ogrenilmemis
+        for b in model.blocks:
+            b.ffn.router.weight.requires_grad_(False)
+            b.ffn.router.bias.requires_grad_(False)
+    elif args.router == "fixed":              # sabit ilk-k blok: girdi-bagimsiz
+        for b in model.blocks:
+            b.ffn.override = "fixed"
     npar = sum(p.numel() for p in model.parameters())
     active = args.k / args.G
+    rtag = "" if args.router == "learned" else "_" + args.router   # dosya adi (overwrite onleme)
     print(f"[i] cihaz={dev} seed={args.seed}  BornGPT ~{npar/1e6:.1f}M  "
-          f"G={args.G} k={args.k} -> aktif {active:.1%}  (A dogal ~%10.7)")
+          f"G={args.G} k={args.k} -> aktif {active:.1%}  router={args.router}")
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95),
                             weight_decay=0.1)
     use_amp = (dev == "cuda")
@@ -209,8 +230,8 @@ def main():
                                            "L": args.n_layer, "h": args.n_head,
                                            "blk": args.block, "d_ff": args.d_ff,
                                            "G": args.G, "k": args.k},
-                                "seed": args.seed, "step": step},
-                               os.path.join(args.data, f"born_G{args.G}k{args.k}.pt"))
+                                "seed": args.seed, "step": step, "router": args.router},
+                               os.path.join(args.data, f"born_G{args.G}k{args.k}_s{args.seed}{rtag}.pt"))
 
             if step % args.sample_every == 0 and step > 0:
                 ids = tok.encode("Once upon a time").ids
@@ -242,13 +263,13 @@ def main():
     print(f"\n[SONUC] val ppl {ppl:.3f}  aktif {active:.1%}  "
           f"route-entropi {ent:.3f}  max-blok {mx:.1%}")
     print("   ornek: " + tok.decode(out).replace("\n", " ")[:200])
-    rep = os.path.join(args.data, f"born_report_G{args.G}k{args.k}.json")
+    rep = os.path.join(args.data, f"born_report_G{args.G}k{args.k}_s{args.seed}{rtag}.json")
     with open(rep, "w") as f:
-        json.dump({"G": args.G, "k": args.k, "active_frac": active,
+        json.dump({"G": args.G, "k": args.k, "active_frac": active, "router": args.router,
                    "params_M": round(npar/1e6, 2), "final_ppl": round(ppl, 3),
                    "route_entropy": round(ent, 3), "max_block": round(mx, 3),
                    "history": hist}, f, indent=2)
-    print(f"[ok] ckpt -> born_G{args.G}k{args.k}.pt\n[ok] rapor -> {rep}")
+    print(f"[ok] ckpt -> born_G{args.G}k{args.k}_s{args.seed}{rtag}.pt\n[ok] rapor -> {rep}")
     print("Karsilastir: A oracle @B=aktif (oracle_baby_baby_s0.json) + A baseline 4.48.")
     print("Tez: B, A'nin bu butcedeki oracle/predictor'ini geciyorsa dogustan-goz kazandi.")
 

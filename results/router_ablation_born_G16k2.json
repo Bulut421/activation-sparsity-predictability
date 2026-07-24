@@ -1,0 +1,19 @@
+{
+  "born": "tinystories_data/born_G16k2.pt",
+  "active": 0.125,
+  "ppl_learned": 4.7216,
+  "ppl_random": 1338.0219,
+  "ppl_fixed": 1220.1824,
+  "selection_diversity_by_layer": {
+    "0": 0.9028,
+    "1": 0.9099,
+    "2": 0.9109,
+    "3": 0.9103,
+    "4": 0.9097,
+    "5": 0.9095,
+    "6": 0.9076,
+    "7": 0.9076
+  },
+  "marginal_entropy": 0.9996,
+  "max_block": 0.0685
+}

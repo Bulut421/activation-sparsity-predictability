@@ -18,7 +18,7 @@ But the deeper result is about **who does the selecting.** A predictor bolted on
 | 12.5% active | +32.0% ppl | **+5.2% ppl** | +2.1% ppl |
 | 6.25% active | +158% ppl | **+22.4% ppl** | +12.4% ppl |
 
-The born-eye removes ~90% of what we call the **imitation burden** (predictor cost minus oracle cost), *consistently* — while the post-hoc predictor's burden explodes as the budget tightens. Being born knowing what to skip beats learning to guess it.
+The born-eye removes ~90% of what we call the **imitation burden** (predictor cost minus oracle cost), *consistently* — while the post-hoc predictor's burden explodes as the budget tightens. Being born knowing what to skip beats learning to guess it. And it shows up in wall-clock: because the born-eye's active blocks are *contiguous*, ordinary matmul on zero-copy slices turns the 12.5% budget into a measured **~2.1× end-to-end decode speedup** at 1.3B-parameter shape on CPU — where the same post-hoc predictor, stuck gathering scattered neurons, manages ~1.2×.
 
 **Caveat up front:** this is validated at *research scale* — a 17.5M-parameter model on TinyStories, at two budgets. The mechanism is clean and the trend is consistent, but large-scale confirmation is open work.
 
@@ -101,6 +101,36 @@ As the budget tightens, the post-hoc predictor's imitation burden *explodes* (30
 
 The mechanism, measured: at a budget near the live rate, the predictor must guess with no recall slack, and its errors compound across layers. The born-eye doesn't guess — it decides, and its weights are organized around that decision. There is no true activation to miss, because the selection *is* the computation. (The static baseline's +29763% is the same lesson in reverse: a fixed neuron set that ignores the input is catastrophic — the input-conditioning is the whole game.)
 
+### Why it wins — it's co-adaptation, not the router
+
+We tried to break our own result. Entropy near 1.0 shows the router doesn't collapse, but it doesn't show the router is *useful* — a random router gives entropy 1.0 too. So we trained three born-eyes from scratch, identical except the router: **learned** (normal), **random** (a frozen random projection — input-dependent but never trained), and **fixed** (input-independent, always the same blocks). Same eval:
+
+| variant | ppl | what it adds |
+|---|---|---|
+| born, learned router | 4.723 | — |
+| born, random (frozen) router | 4.827 | learning the router: **+0.10** |
+| born, fixed (input-independent) | 5.265 | input-conditioning: **+0.44** |
+| best post-hoc predictor | 5.916 | co-adaptation: **+0.65** |
+
+The decomposition is humbling and clarifying. In order of importance: **co-adaptation ≫ input-conditioning ≫ learning the router.** The learned router — the part that looks clever — contributes the *least* (~2%). What matters is (1) training the body knowing it will be sparse, and (2) giving it a *consistent, input-conditional* partition to organize around — even a random one. Strikingly, even the *fixed* born-eye (the dumbest variant) beats the best post-hoc predictor. So born-eye's edge over bolt-on prediction is almost entirely co-adaptation, not routing intelligence: the body and its (arbitrary) sparse structure grow together, so there is no foreign pattern to imitate.
+
+This doesn't weaken the thesis — born still beats post-hoc decisively — it corrects the *why*. And the caveat matters: at this tiny scale (16 blocks, k=2), learned routing may simply have little to add; at scale, with many blocks and harder tasks, learning *where* to look could dominate. Treat "learning the router barely helps" as a small-scale finding, not a law — the same discipline that caught the data-starvation artifacts earlier.
+
+One more control completes the picture: sweeping the *granularity* at fixed budget (8, 16, and 32 blocks). The partition has to be fine enough — 8 coarse blocks cost ~15% more perplexity — but past a threshold it saturates: 16 and 32 blocks give *identical* perplexity. So the born-eye needs three things — co-adaptive sparse training, an input-conditional partition, and enough granularity (block count past a floor) — and needs neither a *learned* selection nor ever-finer blocks. That's richer than a single fixed sparsity pattern, but simpler than a smart router.
+
+### Does it actually run faster?
+
+Compute saved isn't latency saved until you actually *don't read* the skipped weights. We built a full KV-cached decode loop — every layer, attention, head, one token at a time — and timed it on CPU (single-thread, the clean small-matvec regime), dense vs born vs post-hoc, across four scales:
+
+| model | FFN share of decode | born end-to-end | post-hoc end-to-end |
+|---|---|---|---|
+| 17M | 49% | 1.24× | 0.75× |
+| 91M | 55% | 1.64× | 0.91× |
+| 693M | 61% | 2.00× | 1.08× |
+| 1.3B-shape | 63% | **2.12×** | 1.23× |
+
+Three things. (1) The born-eye's isolated ~7× FFN kernel survives end-to-end but is **Amdahl-bounded** by the FFN's share of decode time (49→63%, rising with scale), so the honest deployable figure is ~2×, not 8× — the rest is attention, the head, and norms, which the born-eye doesn't touch. (2) It **grows with scale**, as the FFN comes to dominate. (3) The post-hoc predictor is *slower than dense* at small scale (0.75×) and only 1.2× even at 1.3B — its scattered gather plus predictor overhead eats the saving. Born beats post-hoc end-to-end by ~1.7–1.85× at every scale. The contiguity that lets born's blocks be sliced is the whole reason the compute win turns into a wall-clock win.
+
 ## What it means
 
 The three-week chain lands on one sentence: **post-hoc selectivity is a costly imitation of built-in selectivity, and the cost is measurable.** It showed up three times, on three different axes:
@@ -113,11 +143,12 @@ This is the most honest formulation we found of "beyond MoE": the win isn't a cl
 
 ## Honest caveats & what's open
 
-- **Scale.** 17.5M parameters, TinyStories, two budgets, a block-router of one particular design. The mechanism is clean and the trend is consistent, but nothing here proves it survives at 1B+ parameters or on hard tasks. That's the headline open item.
-- **Efficiency ≠ measured yet for the born-eye.** We measured *quality* at a budget; realized wall-clock speedup needs the sparse kernel path (which we prototyped separately: a copy-free gather-matvec hits ~1.8× decode on CPU, with a ~3.9× ceiling from contiguous blocks — and block-granularity routing maps directly onto it).
+- **Scale — and a sobering signal.** Most results are at 17.5M parameters on TinyStories. A controlled 2× scale-up (to 36M), measured at two budgets, sharpens the picture honestly. Two axes separate cleanly. (1) *Budget:* the born-eye's edge is far larger at aggressive budgets — at 36M it beats the best post-hoc predictor by 31% at a 6.25% budget versus 10% at 12.5% — and this holds at both scales, so the effect is real, not an artifact. (2) *Scale:* at *every* budget, doubling the model roughly *halves* the imitation burden (post-hoc's cost above the oracle drops from ~30 to ~16 points at 12.5%, and from ~146 to ~71 at 6.25%), because the bigger model is naturally sparser (92% vs 89% zeros), which makes prediction easier — exactly the way more training data did earlier. The born-eye's own cost stays flat. So it still wins in every cell, but the margin erodes with scale. The honest claim is therefore narrower than "born-eye wins": its advantage is **concentrated in the constrained regime** — aggressive budgets, smaller models, less data. If the halving-per-doubling trend continued, post-hoc could eventually catch it even at aggressive budgets; whether that happens or the gap plateaus at 1B+ is the headline open question, and two points can't answer it. (The learned-vs-random finding, by contrast, held steady across the scale-up.)
+- **The decode speedup is realizable with stock matmul — but the born-eye's contiguity is what makes it so.** A single-FFN decode micro-benchmark (CPU, T=1, 12.5% budget) shows the born-eye's *contiguous* blocks can be read as zero-copy slice-views and fed to ordinary matmul, reaching ~7× (near the ~8.75× prebuilt ceiling) — about 6× faster than the equivalent scattered-neuron gather a post-hoc predictor is stuck with (~1.2×). The catch is purely implementational: a naive fancy-index gather (`W[idx]`) copies and throws the advantage away (falling back to the post-hoc number); you have to slice per block. Post-hoc sparsity can't do this at all — its live neurons are scattered, so it needs a custom kernel and still pays a penalty. Born sparsity needs no custom kernel. (End-to-end numbers are in "Does it actually run faster?" above: the ~7× kernel becomes a ~2× full-decode speedup once attention and the head are counted.)
+- **Adaptive width doesn't help — and difficulty isn't the axis.** The smallest step toward budget-*trading* is to let one born-eye spend a variable number of blocks per token (average pinned at 12.5%), trained with a straight-through hard gate so the selection is genuine, not a soft rescaling. (A soft-gate version *looked* like it worked — until we thresholded it for deployment and perplexity jumped from 4.6 to 551; the quality was hiding in fractional gates that skip nothing. Measure the deployed behavior, not the training proxy.) The honest version did *not* beat fixed-k (+3.1%), and the correlation between spend and token difficulty came out **negative** — hard, high-loss tokens got *fewer* blocks. High cross-entropy is often irreducible surprise (a name, the start of a sentence) that no extra FFN compute fixes, so the model rationally spends where compute has traction. Fixed-k is enough here, and token loss is the wrong signal to route a budget on.
 - **Router health at scale.** Load-balancing held perfectly here, including at k=1; large models are where routers actually collapse.
 
-Natural next steps: the aggressive-budget trend at a larger model; a unified selector that reads one signal for several "eyes" (neuron-skip, KV-cache eviction, early-exit) trained together; and folding the born-eye onto the sparse-kernel path for a real end-to-end speedup.
+Natural next steps: the aggressive-budget trend at a larger model; a unified selector that reads one signal for several "eyes" (neuron-skip, KV-cache eviction, early-exit) trained together; and a second eye on the attention/KV side, where the decode breakdown shows the remaining time goes at long context. (The adaptive-width negative above is a caution: budget-trading on token difficulty is not the obvious way in.)
 
 ## Reproduce it
 
@@ -128,8 +159,10 @@ Everything runs on a single consumer GPU plus a few Colab hours.
 - `train_prosparse.py` — the ProSparse-mini half-measure.
 - `train_born.py` — the born-eye, from scratch with load-balancing.
 - `oracle_baby.py` / `faz3_compare.py` — the oracle ceiling and the five-arm decision table.
+- `train_born_vark_ste.py` — the adaptive-width (variable-k) born-eye with a straight-through hard gate (the honest negative).
+- `bench_decode_e2e.py` — the end-to-end KV-cached decode benchmark (dense vs born vs post-hoc, scale sweep).
 - Part-1 tooling (`collect_sparsity_v2.py`, `analyze_sparsity_v2.py`, `oracle_quality.py`, `predictor_quality.py`, `scaling_probe_colab.py`, `bench_kernel_kart17.py`) — the OPT/Qwen/ReluLLaMA post-hoc line and the CPU kernel micro-benchmarks.
 
-The full per-experiment log (27 "cards", question → setup → number → verdict → lesson) is in `SPARSITY_NOTES.md` (and its English condensation in `README.md`).
+The full per-experiment log (33 "cards", question → setup → number → verdict → lesson) is in `NOTES_TR.md` (and its English condensation in `README.md`).
 
 *Method notes that kept us honest: try to break every positive result before believing it; recall is a proxy, end-to-end perplexity is the metric; measure in-loop, not per-layer; never trust a sequential train/test split; one variable at a time; and check the oracle ceiling before building any predictor.*
